@@ -29,7 +29,7 @@
     msg(create ? 'Creating account...' : 'Signing in...');
     try {
       const r = create ? await BT.sync.signUp(email, pw) : await BT.sync.signIn(email, pw);
-      if (r && r.needsConfirm) msg('Check your email to confirm your account, then sign in.'); else render();
+      if (r && r.needsConfirm) msg('Check your email (and spam folder) and click the confirmation link, then come back here and sign in.'); else render();
     } catch (e) { msg(e.message); }
   }
 

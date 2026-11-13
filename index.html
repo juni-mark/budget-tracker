@@ -33,6 +33,8 @@
         <div class="chips" id="chips"><button class="chip" data-add="20">+20</button><button class="chip" data-add="50">+50</button><button class="chip" data-add="100">+100</button><button class="chip" data-add="0">Clear</button></div>
         <div class="track"><i id="goalFill"></i></div>
         <div class="sub" id="goalText" aria-live="polite"></div>
+        <div class="chips daterow" id="dates" role="group" aria-label="Date of expense"><button class="chip" data-day="0" aria-pressed="true">Today</button><button class="chip" data-day="1" aria-pressed="false">Yesterday</button><input type="date" id="logDate" aria-label="Pick another date"></div>
+        <div class="sub" id="dateNote" aria-live="polite"></div>
       </div>
       <div class="grid" id="tiles" role="group" aria-label="Category"></div>
       <button class="btn" id="logBtn" disabled>Log expense</button>

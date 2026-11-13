@@ -23,3 +23,7 @@
 .tabs button.on{color:var(--ink);font-weight:700}
 .icon{min-width:44px;height:44px;border:0;background:transparent;display:flex;align-items:center;justify-content:center;font-weight:600}
 .icon:disabled{color:var(--soft)}
+.chip[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:#fff}
+.daterow{align-items:center;flex-wrap:wrap}
+.daterow input{height:40px;padding:0 12px;border:1px solid var(--line);border-radius:20px;background:var(--bg);color:var(--ink);font:inherit;font-size:12px;font-weight:600}
+#dateNote{margin-top:6px;color:var(--ink);font-weight:600}

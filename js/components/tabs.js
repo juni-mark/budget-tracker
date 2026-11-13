@@ -5,6 +5,7 @@
 
   function show(name) {
     if (name === 'wrapped') return BT.wrapped.open();
+    if (name !== 'log') BT.log.resetDate();      // leaving Log always goes back to logging for today
     $$('.screen').forEach(s => s.classList.toggle('on', s.id === 'screen-' + name));
     $$('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
     $('#dock').hidden = name !== 'log';
