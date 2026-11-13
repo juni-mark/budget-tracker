@@ -1,0 +1,29 @@
+/* Reusable components: tiles, chips, bars, segmented control, tab bar. */
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.tile{height:52px;padding:0 4px;border:1px solid var(--line);border-radius:var(--radius);background:transparent;font-size:12px;font-weight:600;line-height:1.2;transition:transform .12s ease}
+.tile[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:#fff}
+.tile:active,.btn:active,.chip:active{transform:scale(.96)}
+.chips{display:flex;justify-content:center;gap:8px;margin-top:10px}
+.chip{height:40px;padding:0 14px;border:1px solid var(--line);border-radius:18px;background:transparent;font-size:12px;font-weight:600;transition:transform .12s ease}
+.track{height:2px;background:var(--line);margin:12px 40px 8px}
+.track i{display:block;height:100%;width:0;background:var(--ink);transition:width .4s ease}
+.track.thin{height:4px;margin:8px 0 0;border-radius:2px}
+.seg{display:flex;gap:2px;padding:2px;background:var(--line);border-radius:10px}
+.seg button{flex:1;height:40px;border:0;border-radius:8px;background:transparent;color:var(--mute);font-size:12px;font-weight:600}
+.seg button.on{background:var(--ink);color:#fff}
+.row{display:grid;grid-template-columns:104px 1fr 84px;gap:10px;align-items:center;min-height:36px;border-top:1px solid var(--line);font-size:12px}
+.row .v{text-align:right;color:var(--mute);font-variant-numeric:tabular-nums}
+.row .v.over{color:var(--ink);font-weight:700}
+.row.more{grid-template-columns:1fr auto;width:100%;border:0;border-top:1px solid var(--line);background:none;text-align:left;font-weight:600}
+.bar{height:4px;border-radius:2px;background:var(--line)}
+.bar i{display:block;height:4px;border-radius:2px;background:var(--slate)}
+.bar i.over{background:var(--ink)}
+.tabs{display:flex;border-top:1px solid var(--line);background:var(--bg);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabs button{flex:1;height:56px;border:0;background:transparent;color:var(--mute);font-size:10px;font-weight:500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+.tabs button.on{color:var(--ink);font-weight:700}
+.icon{min-width:44px;height:44px;border:0;background:transparent;display:flex;align-items:center;justify-content:center;font-weight:600}
+.icon:disabled{color:var(--soft)}
+.chip[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:#fff}
+.daterow{align-items:center;flex-wrap:wrap}
+.daterow input{height:40px;padding:0 12px;border:1px solid var(--line);border-radius:20px;background:var(--bg);color:var(--ink);font:inherit;font-size:12px;font-weight:600}
+#dateNote{margin-top:6px;color:var(--ink);font-weight:600}
