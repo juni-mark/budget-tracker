@@ -1,8 +1,0 @@
-/* Design tokens: the approved white / navy / slate palette. Change colours here only. */
-:root{
-  --bg:#FFFFFF; --ink:#0D1B2A; --mute:#4A5D75; --line:#E0E1DD;
-  --slate:#778DA9; --soft:#B4BDC9; --tint:#D9DFE7;
-  --font:-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;
-  --serif:'Source Serif 4',Georgia,serif;
-  --radius:12px; color-scheme:light;
-}
