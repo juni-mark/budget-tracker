@@ -29,7 +29,7 @@
       let d; try { d = JSON.parse(text); } catch (e) { return { error: 'That file is not a valid backup.' }; }
       if (!d || d.app !== 'budget-tracker' || !Array.isArray(d.expenses)) return { error: 'That file is not a Budget Tracker backup.' };
       const expenses = d.expenses.filter(e => e && DATE.test(e.date) && typeof e.cat === 'string' && Number.isFinite(e.amount) && e.amount > 0)
-        .map(e => ({ id: String(e.id || Math.random().toString(36).slice(2)), date: e.date, cat: e.cat, amount: Math.round(e.amount) }));
+        .map(e => ({ id: String(e.id || Math.random().toString(36).slice(2)), date: e.date, cat: e.cat, amount: Math.round(e.amount * 100) / 100 }));
       const noSpend = (Array.isArray(d.noSpend) ? d.noSpend : []).filter(x => typeof x === 'string' && DATE.test(x));
       let settings = null;
       if (d.settings && Array.isArray(d.settings.categories)) {

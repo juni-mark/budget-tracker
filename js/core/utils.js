@@ -16,8 +16,19 @@
     daysIn: key => { const [y, m] = key.split('-').map(Number); return new Date(y, m, 0).getDate(); },
     monthLabel: key => U.parse(key + '-01').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }),
     dayName: (s, opts) => U.parse(s).toLocaleDateString('en-GB', opts),
-    fmt: n => ((BT.config && BT.config.currency) || '฿') + Math.round(n).toLocaleString('en-US'),
-    short: n => n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : String(Math.round(n)),
+    cur: () => (BT.config && BT.config.currency) || '฿',
+    // money: whole numbers stay whole, anything with cents shows two decimals (34.5 -> 34.50)
+    fmt: n => { const v = Math.round(n * 100) / 100; return U.cur() + v.toLocaleString('en-US', { minimumFractionDigits: Number.isInteger(v) ? 0 : 2, maximumFractionDigits: 2 }); },
+    fmt0: n => U.cur() + Math.round(n).toLocaleString('en-US'),       // averages: whole numbers are easier to read
+    short: n => n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : String(Math.round(n * 100) / 100),
+    money: v => Math.round((parseFloat(v) || 0) * 100) / 100,         // text -> amount with at most 2 decimals
+    cleanAmount: v => {                                                // keeps digits, one dot, max 2 decimals
+      v = String(v).replace(',', '.').replace(/[^\d.]/g, '');
+      const i = v.indexOf('.');
+      if (i >= 0) v = v.slice(0, i + 1) + v.slice(i + 1).replace(/\./g, '').slice(0, 2);
+      v = v.replace(/^0+(?=\d)/, '');
+      return v.charAt(0) === '.' ? '0' + v : v;
+    },
     esc: s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
   };
 })(window.BT = window.BT || {});

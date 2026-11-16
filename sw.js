@@ -1,6 +1,6 @@
 /* Service worker: caches the app so it opens offline and installs like an app.
    Bump VERSION every time you publish a new release so people receive the update. */
-const VERSION = 'bt-v8';
+const VERSION = 'bt-v9';
 const SHELL = ['./', 'index.html', 'manifest.json', 'icons/icon-192.png', 'icons/icon-512.png',
   'css/tokens.css', 'css/base.css', 'css/components.css', 'css/screens.css', 'css/cat.css',
   'js/core/utils.js', 'js/core/config.js', 'js/core/store.js', 'js/core/backup.js', 'js/core/sync.js', 'js/core/sample-data.js',

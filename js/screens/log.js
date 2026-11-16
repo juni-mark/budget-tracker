@@ -3,7 +3,7 @@
   'use strict';
   const U = BT.utils, S = BT.store, C = BT.config, { $, fmt, today, esc } = U;
   let cat = '';
-  const amount = () => parseInt($('#amount').value, 10) || 0;
+  const amount = () => U.money($('#amount').value);
 
   function sync() {
     const input = $('#amount');
@@ -66,11 +66,11 @@
       sync();
     });
     $('#amount').addEventListener('input', e => {
-      e.target.value = e.target.value.replace(/\D/g, '').replace(/^0+/, ''); sync();
+      e.target.value = U.cleanAmount(e.target.value); sync();
     });
     $('#chips').addEventListener('click', e => {
       const b = e.target.closest('.chip'); if (!b) return;
-      const add = +b.dataset.add; $('#amount').value = add ? String(amount() + add) : ''; sync();
+      const add = +b.dataset.add; $('#amount').value = add ? String(Math.round((amount() + add) * 100) / 100) : ''; sync();
     });
     $('#logBtn').addEventListener('click', () => {
       if (!(cat && amount() > 0)) return;

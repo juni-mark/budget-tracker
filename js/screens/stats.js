@@ -27,7 +27,7 @@
     $('#remainLbl').textContent = left >= 0 ? 'Remaining' : 'Over budget';
     $('#remain').textContent = fmt(Math.abs(left)); $('#ofBudget').textContent = 'of ' + fmt(budget);
     $('#budFill').style.width = (budget ? Math.min(spent / budget, 1) * 100 : 0) + '%';
-    $('#kSpent').textContent = fmt(spent); $('#kAvg').textContent = fmt(spent / elapsed);
+    $('#kSpent').textContent = fmt(spent); $('#kAvg').textContent = U.fmt0(spent / elapsed);
     $('#kLog').textContent = S.loggedCount(r.start, r.end) + ' / ' + elapsed;
 
     const cum = []; let run = 0;

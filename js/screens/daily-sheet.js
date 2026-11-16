@@ -28,7 +28,7 @@
     const known = C.categories.some(c => c.id === e.cat);
     const opts = C.categories.map(c => '<option value="' + c.id + '"' + (c.id === e.cat ? ' selected' : '') + '>' + esc(c.name) + '</option>').join('') +
       (known ? '' : '<option value="' + esc(e.cat) + '" selected>Other</option>');
-    return '<div class="edit" role="group" aria-label="Edit expense"><label>Amount<input id="edAmt" type="number" inputmode="numeric" min="1" value="' + e.amount + '"></label>' +
+    return '<div class="edit" role="group" aria-label="Edit expense"><label>Amount<input id="edAmt" type="number" inputmode="decimal" step="0.01" min="0.01" value="' + e.amount + '"></label>' +
       '<label>Category<select id="edCat">' + opts + '</select></label>' +
       '<label>Date<input id="edDate" type="date" max="' + today() + '" value="' + e.date + '"></label>' +
       '<div class="actions"><button class="pill" id="edSave">Save</button><button class="pill" id="edCancel">Cancel</button></div>' +
@@ -36,7 +36,7 @@
   }
 
   function saveEdit() {
-    const amount = parseInt($('#edAmt').value, 10), date = $('#edDate').value, msg = text => { $('#edMsg').textContent = text; };
+    const amount = U.money($('#edAmt').value), date = $('#edDate').value, msg = text => { $('#edMsg').textContent = text; };
     if (!(amount > 0 && amount <= 999999)) return msg('Enter an amount above zero.');
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date > today() || date < '2000-01-01') return msg('Choose a valid date that is not in the future.');
     S.update(editing, { cat: $('#edCat').value, amount, date });
@@ -64,7 +64,7 @@
       '<div><div class="cap" style="color:var(--ink);font-size:13px">' + U.monthLabel(month) + '</div><div class="sub">Swipe or tap the arrows</div></div>' +
       '<button class="icon" id="nextM" aria-label="Next month"' + (cur ? ' disabled' : '') + '>' + arrow('M7.5 4l6 6-6 6') + '</button></div>' +
       '<div class="kpis" style="margin-top:4px"><div><div class="cap">Total</div><div class="serif">' + fmt(total) + '</div></div>' +
-      '<div><div class="cap">Per day</div><div class="serif">' + fmt(total / elapsed) + '</div></div>' +
+      '<div><div class="cap">Per day</div><div class="serif">' + U.fmt0(total / elapsed) + '</div></div>' +
       '<div><div class="cap">Logged</div><div class="serif">' + S.loggedCount(month + '-01', end) + ' of ' + elapsed + '</div></div></div>' +
       '<div class="cal lbl">' + Array.from('MTWTFSS').map(l => '<span>' + l + '</span>').join('') + '</div>' +
       '<div class="cal" id="cal">' + cells() + '</div>' +

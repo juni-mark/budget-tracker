@@ -60,7 +60,7 @@
     isEmpty: () => !S.expenses.length && !S.noSpend.length,
     on: d => S.expenses.filter(e => e.date === d),
     between: (a, b) => S.expenses.filter(e => e.date >= a && e.date <= b),
-    total: (a, b) => Store.between(a, b).reduce((sum, e) => sum + e.amount, 0),
+    total: (a, b) => Math.round(Store.between(a, b).reduce((sum, e) => sum + e.amount, 0) * 100) / 100,
     isLogged: d => S.noSpend.includes(d) || S.expenses.some(e => e.date === d),
     loggedCount(a, b) {
       let n = 0;
