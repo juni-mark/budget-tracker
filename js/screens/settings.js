@@ -10,6 +10,34 @@
   const total = () => cfg.categories.filter(c => !c.hidden).reduce((sum, c) => sum + (+c.budget || 0), 0);
   const say = text => { $('#setMsg').textContent = text; };
 
+  const when = ms => new Date(ms).toLocaleString([], { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const backupRow = (label, key, id) => '<div class="en"><span>' + esc(label) + '</span><button class="ed" data-' + key + '="' + id + '">Restore</button></div>';
+
+  function recoverSection() {        // safety copies kept on this device, plus optional dated cloud backups
+    const local = S.safetyList().map(x => backupRow(when(x.at) + ' \u00b7 ' + x.count + ' expenses \u00b7 ' + x.reason, 'local', x.i)).join('');
+    const cloud = BT.sync.enabled() && BT.sync.signedIn()
+      ? '<div class="actions"><button class="pill" id="cbList">Show cloud backups</button><button class="pill" id="cbNow">Back up now</button></div><div id="cbBox"></div>' : '';
+    return '<section class="set"><div class="cap">Recover data</div><p class="sub">Before anything replaces your data (reset, delete all, import, or a reset from another device) the app keeps a safety copy here. Restoring one replaces your current data, which is saved as a safety copy first.</p>' +
+      (local || '<p class="sub">No safety copies yet.</p>') + cloud + '</section>';
+  }
+
+  async function showCloud() {
+    const box = $('#cbBox'); box.textContent = 'Loading...';
+    try {
+      const list = await BT.sync.backups();
+      box.innerHTML = list.length ? list.map(b => backupRow(when(Date.parse(b.created_at)) + ' \u00b7 ' + b.expense_count + ' expenses \u00b7 ' + (b.reason || ''), 'cloud', b.id)).join('') : '<p class="sub">No cloud backups yet. Tap Back up now.</p>';
+    } catch (e) { box.textContent = 'Cloud backups are not set up yet. Run supabase/backups.sql once in Supabase (see the README).'; }
+  }
+
+  async function restoreCloud(id) {
+    if (!confirm('Restore this cloud backup? It replaces your current data (a safety copy of it is kept first).')) return;
+    try {
+      const res = BT.backup.parse(JSON.stringify(await BT.sync.backupData(id)));
+      if (res.error) return say(res.error);
+      S.replace(res.data, 'Before restoring a cloud backup'); load(); render(); say('Restored ' + res.data.expenses.length + ' expenses.');
+    } catch (e) { say('Could not restore that backup.'); }
+  }
+
   function syncSection() {           // only shown when Supabase keys are set in config.js
     if (!BT.sync.enabled()) return '';
     const head = '<section class="set"><div class="cap">Sync across devices</div>';
@@ -61,7 +89,7 @@
       '<section class="set"><div class="cap">Categories and monthly budgets</div>' + rows +
       '<p class="sub">Monthly budget total: <b id="setTotal">' + fmt(total()) + '</b>. Fixed costs (like rent) show their amount instead of a variance.</p>' +
       '<div class="actions"><button class="pill" id="addCat">Add category</button><button class="pill" id="resetCats">Restore defaults</button></div></section>' +
-      syncHtml + install + '<section class="set"><div class="cap">Your data</div><div class="actions">' +
+      syncHtml + install + recoverSection() + '<section class="set"><div class="cap">Your data</div><div class="actions">' +
       '<button class="pill" id="expJson">Export backup</button><button class="pill" id="expCsv">Export CSV</button><button class="pill" id="impBtn">Import backup</button></div>' +
       '<input type="file" id="setFile" accept=".json,application/json" hidden>' +
       '<p class="sub">Your data is stored on this device only. Export a backup now and then, especially before clearing your browser or changing phones.</p>' +
@@ -75,7 +103,7 @@
       const res = BT.backup.parse(await BT.backup.readFile(file));
       if (res.error) return say(res.error);
       if (!confirm('Replace everything on this device with this backup (' + res.data.expenses.length + ' expenses)?')) return;
-      S.replace(res.data); load(); render(); say('Backup restored: ' + res.data.expenses.length + ' expenses.');
+      S.replace(res.data, 'Before importing a backup'); load(); render(); say('Backup restored: ' + res.data.expenses.length + ' expenses.');
     } catch (e) { say('Could not read that file.'); }
     finally { $('#setFile').value = ''; }
   }
@@ -126,8 +154,19 @@
     if (t.closest('#syNow')) return BT.sync.now();
     if (t.closest('#syOut')) { BT.sync.signOut(); render(); return; }
     if (t.closest('#impBtn')) return $('#setFile').click();
+    const lr = t.closest('[data-local]');
+    if (lr) {
+      if (confirm('Restore this safety copy? It replaces your current data (a safety copy of it is kept first).')) { S.restoreSafety(+lr.dataset.local); load(); render(); say('Restored.'); }
+      return;
+    }
+    const cr = t.closest('[data-cloud]'); if (cr) return restoreCloud(cr.dataset.cloud);
+    if (t.closest('#cbList')) return showCloud();
+    if (t.closest('#cbNow')) { BT.sync.backupNow().then(ok => say(ok ? 'Cloud backup saved.' : 'Could not save a cloud backup. Has supabase/backups.sql been run?')); return; }
     if (t.closest('#installBtn')) return BT.pwa.install().then(render);
-    if (t.closest('#wipe') && confirm('Delete all expenses and no-spend days? If sync is on, they are deleted on your other devices too. Export a backup first if you want to keep them.')) { S.replace({}); say('All expenses deleted.'); }
+    if (t.closest('#wipe')) {
+      const a = prompt('This deletes ALL expenses' + (BT.sync.signedIn() ? ' on every synced device' : '') + '. A safety copy is kept under Recover data. Type DELETE to confirm.');
+      if (a && a.trim().toUpperCase() === 'DELETE') { S.replace({}, 'Before delete all'); render(); say('All expenses deleted. You can restore a safety copy above.'); }
+    }
   }
 
   function open() { removing = null; load(); render(); BT.a11y.open($('#settings'), $('#setDone')); }

@@ -34,6 +34,18 @@
     catch (e) { if (e.status >= 400 && e.status < 500) { keep(null); throw new Error('Signed out. Please sign in again.'); } throw e; }
   }
 
+  async function backup(reason, data) {   // dated copy in the cloud; a failure never blocks normal syncing
+    try {
+      const d = data || S.snapshot();
+      if (!(d.expenses || []).length) return false;
+      await call('/rest/v1/user_backups', { method: 'POST', body: JSON.stringify({ reason, expense_count: d.expenses.length, data: d }) }, true);
+      const old = await call('/rest/v1/user_backups?select=id&order=created_at.desc&offset=30', { method: 'GET' }, true);   // keep the newest 30
+      if (old && old.length) await call('/rest/v1/user_backups?id=in.(' + old.map(x => x.id).join(',') + ')', { method: 'DELETE' }, true);
+      return true;
+    } catch (e) { return false; }      // the backups table is optional (see supabase/backups.sql)
+  }
+  const lastDay = () => { try { return localStorage.getItem('bt.lastBackup'); } catch (e) { return ''; } };
+
   async function run() {              // pull, merge, push. Retries if another device wrote in between.
     if (!enabled() || !auth) return;
     if (busy) { again = true; return; }
@@ -43,6 +55,8 @@
       await fresh();
       for (let i = 0; i < 4; i++) {
         const row = (await call('/rest/v1/user_data?select=data,updated_at', { method: 'GET' }, true))[0];
+        const remote = (row && row.data) || {};          // never let a reset overwrite a cloud copy that has expenses without saving it first
+        if ((remote.expenses || []).length && (S.snapshot().resetAt || 0) > (remote.resetAt || 0)) await backup('Before a reset or import replaced the cloud copy', remote);
         if (row) { merging = true; try { S.mergeRemote(row.data || {}); } finally { merging = false; } }
         const body = JSON.stringify({ data: S.snapshot(), updated_at: new Date().toISOString() });
         if (!row) {
@@ -53,6 +67,8 @@
         if (done && done.length) break;
       }
       state.last = new Date();
+      const day = new Date().toISOString().slice(0, 10);
+      if (lastDay() !== day && await backup('Daily backup')) { try { localStorage.setItem('bt.lastBackup', day); } catch (e) { /* ignore */ } }
     } catch (e) { state.error = e.message || 'Sync failed'; }
     busy = false; tell();
     if (again) { again = false; schedule(500); }
@@ -66,6 +82,9 @@
     statusText: () => state.error ? 'Not synced: ' + state.error
       : state.last ? 'Last synced ' + state.last.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Waiting to sync...',
     now: run,
+    backupNow: async () => { await fresh(); return backup('Manual backup'); },
+    async backups() { await fresh(); return call('/rest/v1/user_backups?select=id,created_at,reason,expense_count&order=created_at.desc&limit=30', { method: 'GET' }, true); },
+    async backupData(id) { await fresh(); const r = await call('/rest/v1/user_backups?select=data&id=eq.' + encodeURIComponent(id), { method: 'GET' }, true); return r && r[0] && r[0].data; },
     async signIn(email, password) {
       keep(session(await call('/auth/v1/token?grant_type=password', { method: 'POST', body: JSON.stringify({ email, password }) }, false)));
       run(); return {};

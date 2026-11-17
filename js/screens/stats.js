@@ -53,7 +53,6 @@
     $('#cats').addEventListener('click', e => { if (e.target.closest('#more')) { showAll = !showAll; render(); } });
     $('#avgBtn').addEventListener('click', () => BT.daily.open());
     $('#sampleBtn').addEventListener('click', () => S.replace(BT.sample()));
-    $('#resetBtn').addEventListener('click', () => { if (confirm('Delete all saved expenses? If sync is on, they are deleted on your other devices too.')) S.replace({}); });
     S.subscribe(render); render();
   }
 

@@ -11,6 +11,15 @@
     subs.forEach(fn => fn());
   }
 
+  const SAFE = 'bt.safety';
+  const safetyList = () => { try { return JSON.parse(localStorage.getItem(SAFE)) || []; } catch (e) { return []; } };
+  function keepSafety(reason) {      // before anything replaces your data, keep a copy you can restore from Settings
+    if (!S.expenses.length) return;
+    const list = safetyList();
+    list.unshift({ at: Date.now(), reason, expenses: S.expenses, noSpend: S.noSpend, settings: S.settings });
+    try { localStorage.setItem(SAFE, JSON.stringify(list.slice(0, 5))); } catch (e) { /* storage full */ }
+  }
+
   const Store = BT.store = {
     subscribe: fn => subs.push(fn),
     add(cat, amount, date = today()) {
@@ -35,8 +44,8 @@
     markNoSpend(date = today()) {
       if (!Store.on(date).length && !S.noSpend.includes(date)) { S.noSpend.push(date); commit(); }
     },
-    replace(data) {                  // swap the logged data; settings only change if the data carries them
-      S.onboarded = true; S.resetAt = Date.now(); S.deleted = []; S.expenses = data.expenses || []; S.noSpend = data.noSpend || [];
+    replace(data, reason) {          // swap the logged data; settings only change if the data carries them
+      keepSafety(reason || 'Before your data was replaced'); S.onboarded = true; S.resetAt = Date.now(); S.deleted = []; S.expenses = data.expenses || []; S.noSpend = data.noSpend || [];
       if (data.settings) { S.settings = data.settings; S.settingsAt = Date.now(); BT.config.apply(S.settings); }
       commit();
     },
@@ -45,7 +54,9 @@
     finishSetup(s) { S.onboarded = true; S.settings = s; BT.config.apply(s); commit(); },
     mergeRemote(r) {                 // combine data pulled from the cloud with this device's data
       const lr = S.resetAt || 0, rr = r.resetAt || 0;
-      if (rr > lr) { S.expenses = r.expenses || []; S.noSpend = r.noSpend || []; S.deleted = r.deleted || []; S.resetAt = rr; }
+      if (rr > lr) {
+        if ((r.expenses || []).length < S.expenses.length) keepSafety('Before a reset from another device reached this one');
+        S.expenses = r.expenses || []; S.noSpend = r.noSpend || []; S.deleted = r.deleted || []; S.resetAt = rr; }
       else if (rr === lr) {          // same history: union, minus anything deleted on either side
         const gone = new Set((S.deleted || []).concat(r.deleted || [])), byId = new Map();
         S.expenses.concat(r.expenses || []).forEach(e => { const old = byId.get(e.id); if (!gone.has(e.id) && (!old || (e.u || 0) >= (old.u || 0))) byId.set(e.id, e); });
@@ -55,6 +66,12 @@
       }                              // else this device reset more recently: keep local
       if ((r.settingsAt || 0) > (S.settingsAt || 0) && r.settings) { S.settings = r.settings; S.settingsAt = r.settingsAt; BT.config.apply(r.settings); }
       S.onboarded = true; commit();
+    },
+    safetyList: () => safetyList().map((x, i) => ({ i, at: x.at, reason: x.reason, count: x.expenses.length })),
+    restoreSafety(i) {
+      const x = safetyList()[i];
+      if (x) Store.replace({ expenses: x.expenses, noSpend: x.noSpend, settings: x.settings }, 'Before restoring an earlier copy');
+      return !!x;
     },
     snapshot: () => ({ app: 'budget-tracker', version: 1, exportedAt: new Date().toISOString(), settings: S.settings, expenses: S.expenses, noSpend: S.noSpend, deleted: S.deleted, settingsAt: S.settingsAt, resetAt: S.resetAt }),
     isEmpty: () => !S.expenses.length && !S.noSpend.length,
